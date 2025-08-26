@@ -20,6 +20,9 @@ if [[ "$REGISTER_RESPONSE" == *"true"* ]]; then
     # Inicializiraj currentJOB
     currentJOB="None"
 
+    echo 0 > DATA/working_state.txt
+    echo None > DATA/current_job.txt
+
     while true; do
         # Pošlji trenutni job z metodo PUT
         RESPONSE=$(curl -s -X PUT \
@@ -29,27 +32,39 @@ if [[ "$REGISTER_RESPONSE" == *"true"* ]]; then
 
         echo "Odgovor strežnika: $RESPONSE"
 
-        # Če strežnik vrne nov job (ni enak trenutnemu)
-        if [ "$RESPONSE" != "$currentJOB" ]; then
-            
-	     currentJOB="fibo"
+	# Razdeli odgovor po presledku
+	JOB_TYPE=$(echo "$RESPONSE" | awk '{print $1}')
+        JOB_ARGS=$(echo "$RESPONSE" | cut -d' ' -f2-)
 
-	     (
+
+        # Če strežnik vrne nov job (ni enak trenutnemu)
+	
+	if [ "$RESPONSE" != "$currentJOB" ] && [ "$JOB_TYPE" != "None" ]; then
+           
+	    currentJOB="$RESPONSE"
+
+
+            echo "$JOB_TYPE" > DATA/current_job.txt
+            echo 1 > DATA/working_state.txt
+
+            (
                 # Zaženi logic.sh kot ozadni proces in ujemi rezultat
-                ./logic.sh "$RESPONSE" > temp_output.txt
-                RESULT=$(<temp_output.txt)     # preberi izhod iz datoteke
-                rm temp_output.txt             # počisti začasno datoteko
+                ./logic.sh "$JOB_TYPE" $JOB_ARGS > temp_output.txt
+                RESULT=$(<temp_output.txt)
+                rm temp_output.txt
 
                 echo "logic.sh je koncal, izhod: $RESULT"
 
-		DFP=$(./podpis.sh)
+                DFP=$(./podpis.sh)
 
                 curl -s -X PUT \
-        	   -H "Content-Type: application/json" \
-        	   -d "{\"DFP\":\"$DFP\", \"RESULT\":\"$RESULT\"}" \
-        	   "https://stralax-dfp-streznik.onrender.com/api/beagleBoard/job-done"
+                   -H "Content-Type: application/json" \
+                   -d "{\"DFP\":\"$DFP\", \"RESULT\":\"$RESULT\"}" \
+                   "https://stralax-dfp-streznik.onrender.com/api/beagleBoard/job-done"
 
                 echo "Obvestilo o koncu job-a poslano, currentJOB resetiran na None."
+                echo None > DATA/current_job.txt
+                echo 0 > DATA/working_state.txt
             ) &
         fi
 
@@ -59,4 +74,4 @@ if [[ "$REGISTER_RESPONSE" == *"true"* ]]; then
 else
     echo "Registration failed (response ne vsebuje 'true')."
 fi
-
+ 

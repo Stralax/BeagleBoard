@@ -1,14 +1,14 @@
 #!/bin/bash
 
-n=1
 if [ -z "$1" ]; then
     n=555
-else 
+else
     n=$1
 fi
 
-if [ "$n" -lt 0 ]; then
-    echo "Error: n must be >= 0"
+# Preveri, da je n celo število
+if ! [[ "$n" =~ ^[0-9]+$ ]]; then
+    echo "Error: n must be integer >= 0"
     exit 1
 fi
 
@@ -24,8 +24,9 @@ a=0
 b=1
 
 for ((i=2; i<=n; i++)); do
-    b=$(echo "$a + $b" | bc)
-    a=$(echo "$b - $a" | bc)
+    tmp=$(echo "$a + $b" | bc)  # novo število
+    a=$b                        # premaknemo naprej
+    b=$tmp
 done
 
 echo "$b" | tr -d '[:space:]' | tr -d '\\'

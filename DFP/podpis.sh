@@ -15,6 +15,10 @@ modules_count=$(lsmod | wc -l)
 boot_time=$(awk '{print $1}' /proc/uptime)
 packages_hash=$(if command -v dpkg >/dev/null; then dpkg -l | sha256sum | awk '{print $1}'; elif command -v rpm >/dev/null; then rpm -qa | sha256sum | awk '{print $1}'; else echo "N/A"; fi)
 
+working_state=$(cat DATA/working_state.txt)
+current_job=$(cat DATA/current_job.txt)
+
+
 # FPGA ID
 fpga_id=$(sudo head -c 24 /sys/bus/nvmem/devices/1-00501/nvmem 2>/dev/null)
 eeprom="$fpga_id"
@@ -63,7 +67,7 @@ fi
 device_hash=$(echo -n "${cpu_arch}_${cpu_model}_${emmc_cid}_${mac}_${eeprom}" | sha256sum | awk '{print $1}')
 
 # --- Determinističen niz za HMAC (surovi podatki) ---
-hmac_input="${cpu_vendor}_${cpu_arch}_${cpu_model}_${cpu_hartid}_${mac}_${emmc_cid}_${kernel}_${kernel_conf_hash}_${dt_model}_${dt_compatible}_${modules_count}_${boot_time}_${packages_hash}_${eeprom}_${loadavg}_${user_processes}_${avail_ram}_${disk_free_mb}_${disk_io}_${rx_bytes}_${tx_bytes}_${top5_processes}_${gpio_value}_${i2c_devices}_${device_hash}"
+hmac_input="${cpu_vendor}_${cpu_arch}_${cpu_model}_${cpu_hartid}_${mac}_${emmc_cid}_${kernel}_${kernel_conf_hash}_${dt_model}_${dt_compatible}_${modules_count}_${boot_time}_${packages_hash}_${eeprom}_${loadavg}_${user_processes}_${avail_ram}_${disk_free_mb}_${disk_io}_${rx_bytes}_${tx_bytes}_${top5_processes}_${gpio_value}_${i2c_devices}_${device_hash}_${working_state}_${current_job}"
 
 # --- HMAC podpis (pravilno: base64 od surovih podatkov) ---
 secret_key="Snoopy"
@@ -98,7 +102,9 @@ dfp_json=$(cat <<EOF
   "top5_processes":"$top5_processes",
   "gpio_value":"$gpio_value",
   "i2c_devices":"$i2c_devices",
-  "device_hash":"$device_hash"
+  "device_hash":"$device_hash",
+  "working_state":"$working_state",
+  "current_job":"$current_job"
 }
 EOF
 )
