@@ -23,14 +23,14 @@ call_podpis() {
             ;;
         3)
             if [ "$call_index" -eq 1 ]; then
-                script="./dynamic_registrationsh"
+                script="./dynamic_registration.sh"
             else
                 script="./fullDynamic_podpis.sh"
             fi
             ;;
         4)
             if [ "$call_index" -eq 1 ]; then
-                script="./hybrid_registrationsh"
+                script="./hybrid_registration.sh"
             else
                 script="./hybrid_podpis.sh"
             fi
