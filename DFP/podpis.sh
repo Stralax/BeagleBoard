@@ -1,3 +1,4 @@
+beagle@BeagleV:~/DFP$ cat podpis.sh 
 #!/bin/bash
 
 # --- Osnovni podatki naprave ---
@@ -134,4 +135,5 @@ final_encoded=$(echo -n "$final_json" | base64 -w0)
 #echo
 #echo "Finalni paket (JSON+HMAC, base64):"
 echo "$final_encoded"
+
 
