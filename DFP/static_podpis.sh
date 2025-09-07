@@ -1,5 +1,10 @@
 #!/bin/bash
 
+
+START_TIME=$(date +%s%3N)  # za�~Metni �~Mas v milisekundah
+
+
+
 # Preveri, če je geslo podano
 if [ -z "$1" ]; then
   #echo "Uporaba: $0 <geslo_za_HMAC>"
@@ -24,15 +29,15 @@ dt_model=$(tr -d '\0' </sys/firmware/devicetree/base/model 2>/dev/null)
 dt_compatible=$(tr -d '\0' </sys/firmware/devicetree/base/compatible 2>/dev/null)
 
 # --- GPIO ---
-gpio_value=""
-for line in {0..13}; do
-    value=$(gpioget gpiochip0 $line 2>/dev/null)
-    gpio_value+="$line:$value,"
-done
+#gpio_value=""
+#for line in {0..13}; do
+#    value=$(gpioget gpiochip0 $line 2>/dev/null)
+#    gpio_value+="$line:$value,"
+#done
 gpio_value=${gpio_value%,}
 
 # --- 1. SHA-256 hash statičnih spremenljivk ---
-static_data="${cpu_arch}_${cpu_model}_${emmc_cid}_${mac_eth0}_${mac_usb0}_${eeprom}_${machine_id}_${dt_model}_${dt_compatible}_${gpio_value}"
+static_data="${cpu_arch}_${cpu_model}_${emmc_cid}_${mac_eth0}_${mac_usb0}_${eeprom}_${machine_id}_${dt_model}_${dt_compatible}"
 static_hash=$(echo -n "$static_data" | sha256sum | awk '{print $1}')
 #echo "SHA-256 statičnih podatkov: $static_hash"
 echo $static_hash
@@ -52,4 +57,12 @@ EOF
 
 json_base64=$(echo -n "$json" | base64 -w0)
 #echo "JSON + Base64: $json_base64"
+
+
+END_TIME=$(date +%s%3N)  # kon�~Mni �~Mas v milisekundah
+ELAPSED=$((END_TIME - START_TIME))
+
+echo "�~Las izvajanja: ${ELAPSED} ms"
+echo "Register response: $REGISTER_RESPONSE"
+
 

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# ------------------------
+START_TIME=$(date +%s%3N)  # za�~Metni �~Mas v milisekundah
+
+
 # Preveri, če je geslo podano
 if [ -z "$1" ]; then
   echo "Uporaba: $0 <geslo_za_HMAC>"
@@ -22,21 +26,21 @@ machine_id=$(cat /etc/machine-id 2>/dev/null || echo "N/A")
 dt_model=$(tr -d '\0' </sys/firmware/devicetree/base/model 2>/dev/null || echo "N/A")
 dt_compatible=$(tr -d '\0' </sys/firmware/devicetree/base/compatible 2>/dev/null || echo "N/A")
 
-# GPIO
-gpio_value=""
-for line in {0..13}; do
-    value=$(gpioget gpiochip0 $line 2>/dev/null || echo "N/A")
-    gpio_value+="$line:$value,"
-done
-gpio_value=${gpio_value%,}
+## GPIO
+#gpio_value=""
+#for line in {0..13}; do
+#    value=$(gpioget gpiochip0 $line 2>/dev/null || echo "N/A")
+#    gpio_value+="$line:$value,"
+#done
+#gpio_value=${gpio_value%,}
 
 # --- Dodatni podatki ---
-working_state=$(cat DATA/working_state.txt 2>/dev/null || echo "N/A")
-current_job=$(cat DATA/current_job.txt 2>/dev/null || echo "N/A")
+working_state=1 #$(cat DATA/working_state.txt 2>/dev/null || echo "N/A")
+current_job="fibo" #$(cat DATA/current_job.txt 2>/dev/null || echo "N/A")
 packages_hash=$(if command -v dpkg >/dev/null; then dpkg -l | sha256sum | awk '{print $1}'; elif command -v rpm >/dev/null; then rpm -qa | sha256sum | awk '{print $1}'; else echo "N/A"; fi)
 
 # --- Statični podatki za hash ---
-data="${cpu_vendor}_${cpu_arch}_${cpu_model}_${cpu_hartid}_${emmc_cid}_${mac_eth0}_${mac_usb0}_${eeprom}_${machine_id}_${dt_model}_${dt_compatible}_${gpio_value}_${working_state}_${current_job}_${packages_hash}"
+data="${cpu_vendor}_${cpu_arch}_${cpu_model}_${cpu_hartid}_${emmc_cid}_${mac_eth0}_${mac_usb0}_${eeprom}_${machine_id}_${dt_model}_${dt_compatible}_${working_state}_${current_job}_${packages_hash}"
 
 # --- 1. Fuzzy hash statičnih podatkov z Python TLSH ---
 if python3 -c "import tlsh" 2>/dev/null; then
@@ -64,4 +68,13 @@ EOF
 
 json_base64=$(echo -n "$json" | base64 -w0)
 #echo "JSON + Base64: $json_base64"
+
+
+
+
+END_TIME=$(date +%s%3N)  # kon�~Mni �~Mas v milisekundah
+ELAPSED=$((END_TIME - START_TIME))
+
+echo "�~Las izvajanja: ${ELAPSED} ms"
+echo "Register response: $REGISTER_RESPONSE"
 

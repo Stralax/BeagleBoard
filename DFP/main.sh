@@ -23,14 +23,14 @@ call_podpis() {
             ;;
         3)
             if [ "$call_index" -eq 1 ]; then
-                script="./dynamic_registration.sh"
+                script="./fullDynamic_podpis.sh"
             else
                 script="./fullDynamic_podpis.sh"
             fi
             ;;
-        4)
+		4)
             if [ "$call_index" -eq 1 ]; then
-                script="./hybrid_registration.sh"
+                script="./hybrid_registrtion.sh"
             else
                 script="./hybrid_podpis.sh"
             fi
@@ -50,12 +50,18 @@ echo "Signature: $SIGNATURE"
 # ------------------------
 # 2. Pošlji POST zahtevo za registracijo
 # ------------------------
+START_TIME=$(date +%s%3N)  # začetni čas v milisekundah
+
 REGISTER_RESPONSE=$(curl -s -X POST \
     -H "Content-Type: application/json" \
     -d "{\"signature\":\"$SIGNATURE\"}" \
     https://stralax-dfp-streznik.onrender.com/api/beagleBoard/register)
 
-echo "Register response: $REGISTER_RESPONSE"
+END_TIME=$(date +%s%3N)  # končni čas v milisekundah
+ELAPSED=$((END_TIME - START_TIME))
+
+#echo "Čas izvajanja: ${ELAPSED} ms"
+#echo "Register response: $REGISTER_RESPONSE"
 
 # ------------------------
 # 3. Če je registracija uspešna, zaženi neskončno zanko
@@ -72,7 +78,10 @@ if [[ "$REGISTER_RESPONSE" == *"true"* ]]; then
 
     while true; do
         # Pošlji trenutni job z metodo PUT
-        RESPONSE=$(curl -s -X PUT \
+        
+	START_TIME=$(date +%s%3N)
+	
+	RESPONSE=$(curl -s -X PUT \
             -H "Content-Type: application/json" \
             -d "{\"JOB\":\"$currentJOB\",\"DFP\":\"$DFP\"}" \
             "https://stralax-dfp-streznik.onrender.com/api/beagleBoard/job")
@@ -111,6 +120,15 @@ if [[ "$REGISTER_RESPONSE" == *"true"* ]]; then
                 echo 0 > DATA/working_state.txt
             ) &
         fi
+
+
+	END_TIME=$(date +%s%3N)  # kon�~Mni �~Mas v milisekundah
+	ELAPSED=$((END_TIME - START_TIME))
+
+		echo "�~Las izvajanja: ${ELAPSED} ms"
+	echo "Register response: $REGISTER_RESPONSE"
+
+
 
         # Počakaj 3 sekunde preden pošlješ naslednji PUT
         sleep 3

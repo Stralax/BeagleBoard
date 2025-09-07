@@ -1,5 +1,9 @@
 #!/bin/bash
 
+START_TIME=$(date +%s%3N)  # za�~Metni �~Mas v milisekundah
+
+
+
 # Preveri, če je geslo za HMAC podano
 if [ -z "$1" ]; then
   echo "Uporaba: $0 <geslo_za_HMAC>"
@@ -125,3 +129,18 @@ EOF
 json_base64=$(echo -n "$json_data" | base64 -w0)
 #echo "Base64 kodiran JSON: $json_base64"
 echo $json_base64
+
+
+
+
+
+END_TIME=$(date +%s%3N)  # kon�~Mni �~Mas v milisekundah
+ELAPSED=$((END_TIME - START_TIME))
+
+echo "�~Las izvajanja: ${ELAPSED} ms"
+echo "Register response: $REGISTER_RESPONSE"
+
+
+
+
+
